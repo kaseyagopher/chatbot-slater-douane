@@ -4,6 +4,10 @@ import cors from "cors";
 import { db } from "./db.js";
 import { v4 as uuidv4 } from "uuid";
 
+// Swagger (OpenAPI)
+import swaggerUi from 'swagger-ui-express';
+import swaggerDocument from './swagger.js';
+
 // LLM (Groq)
 import { getGroqChatCompletion } from "./groq.js";
 
@@ -63,6 +67,10 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Serve swagger UI and raw spec
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.get('/api-docs.json', (req, res) => res.json(swaggerDocument));
 
 // =======================
 // Configuration session
@@ -362,48 +370,6 @@ app.post("/api/chat", async (req, res) => {
 // =======================
 // Endpoints support / technicien
 // =======================
-app.post("/api/support/connect", async (req, res) => {
-    const { sessionId, technicianId } = req.body || {};
-    if (!sessionId || !technicianId) {
-        return res.status(400).json({ error: "Requête invalide" });
-    }
-    try {
-        await db.query(
-            "UPDATE chat_sessions SET technician_connected = 1, technician_id = ?, last_activity = NOW() WHERE id = ?",
-            [technicianId, sessionId]
-        );
-        // Optionnel : insérer un message système
-        await db.query(
-            "INSERT INTO chat_messages (session_id, role, content) VALUES (?, 'assistant', ?)",
-            [sessionId, `Le technicien ${technicianId} est maintenant connecté.`]
-        );
-        return res.json({ ok: true });
-    } catch (err) {
-        console.error("Erreur /api/support/connect :", err);
-        return res.status(500).json({ error: "Erreur serveur" });
-    }
-});
-
-app.post("/api/support/disconnect", async (req, res) => {
-    const { sessionId } = req.body || {};
-    if (!sessionId) {
-        return res.status(400).json({ error: "Requête invalide" });
-    }
-    try {
-        await db.query(
-            "UPDATE chat_sessions SET technician_connected = 0, technician_id = NULL, last_activity = NOW() WHERE id = ?",
-            [sessionId]
-        );
-        await db.query(
-            "INSERT INTO chat_messages (session_id, role, content) VALUES (?, 'assistant', ?)",
-            [sessionId, `Le technicien s'est déconnecté.`]
-        );
-        return res.json({ ok: true });
-    } catch (err) {
-        console.error("Erreur /api/support/disconnect :", err);
-        return res.status(500).json({ error: "Erreur serveur" });
-    }
-});
 
 // Technicien envoie un message (sera stocké et visible pour le client)
 app.post("/api/support/message", async (req, res) => {

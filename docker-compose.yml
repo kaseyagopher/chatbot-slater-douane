@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    container_name: chatbot_api
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+  db:
+    image: mysql:8
+    command:  --default-authentication-plugin=mysql_native_password
+    container_name: chatbot_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: chatbot
+      MYSQL_USER: chatbot
+      MYSQL_PASSWORD: chatbot
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
