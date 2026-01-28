@@ -12,7 +12,6 @@ services:
       - db
   db:
     image: mysql:8
-    command:  --default-authentication-plugin=mysql_native_password
     container_name: chatbot_db
     restart: always
     environment:

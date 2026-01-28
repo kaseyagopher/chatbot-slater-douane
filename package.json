@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "migrate": "knex --knexfile ./knexfile.js migrate:latest",
+    "migrate:rollback": "knex --knexfile ./knexfile.js migrate:rollback",
+    "migrate:es": "node ./scripts/runMigrations.js"
   },
   "keywords": [],
   "author": "",
